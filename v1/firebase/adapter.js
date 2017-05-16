@@ -1,5 +1,9 @@
 var firebase = require('firebase');
-var {serializeChannel, serializeTrack, serializeImage} = require('./serializer.js');
+var {
+	serializeChannel,
+	serializeTrack,
+	serializeImage
+} = require('./serializer.js');
 
 var firebaseConfig = {
 	apiKey: process.env.FIREBASE_API_KEY,
@@ -10,18 +14,16 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 function apiGet(endpoint) {
-	return (
-		firebase.database().ref(endpoint)
-			.once('value')
-	);
+	return firebase.database().ref(endpoint).once('value');
 }
 
 function apiQuery(endpoint, prop, query) {
-	return (
-		firebase.database().ref(endpoint)
-			.orderByChild(prop).equalTo(query)
-			.once('value')
-	);
+	return firebase
+		.database()
+		.ref(endpoint)
+		.orderByChild(prop)
+		.equalTo(query)
+		.once('value');
 }
 
 function apiGetImage(imageId) {
@@ -50,7 +52,9 @@ function apiGetChannelTracks(channelId) {
 		if (!tracks) {
 			return [];
 		}
-		var serializedTracks = Object.keys(tracks).map(trackId => serializeTrack(tracks[trackId], trackId));
+		var serializedTracks = Object.keys(tracks).map(trackId =>
+			serializeTrack(tracks[trackId], trackId)
+		);
 		return serializedTracks;
 	});
 }
@@ -58,21 +62,24 @@ function apiGetChannelTracks(channelId) {
 function apiGetChannels() {
 	return apiGet('channels').then(snapshot => {
 		var val = snapshot.val();
-		var channels = Object.keys(val).map(channelId => serializeChannel(val[channelId], channelId));
+		var channels = Object.keys(val).map(channelId =>
+			serializeChannel(val[channelId], channelId)
+		);
 		return channels;
 	});
 }
 
 var FILTERS = {
 	contains: (channel, val) => channel.indexOf(val) > -1,
-	icontains: (channel, val) => channel.toLowerCase().indexOf(val.toLowerCase()) > -1,
+	icontains: (channel, val) =>
+		channel.toLowerCase().indexOf(val.toLowerCase()) > -1,
 	startsWith: (channel, val) => channel.startsWith(val),
 	gt: (channel, val) => channel.length > val
 };
 
 function apiGetChannelsFiltered(filters) {
-	var filterFun = function (filter, val) {
-		return function (channel) {
+	var filterFun = function(filter, val) {
+		return function(channel) {
 			var query = filter.split('.');
 
 			if (query.length === 1) {
@@ -96,10 +103,11 @@ function apiGetChannelsFiltered(filters) {
 		};
 	};
 	return apiGetChannels().then(channels =>
-    Object.keys(filters).reduce(
-      (channels, filter) => channels.filter(filterFun(filter, filters[filter])),
-      channels)
-  );
+		Object.keys(filters).reduce(
+			(channels, filter) => channels.filter(filterFun(filter, filters[filter])),
+			channels
+		)
+	);
 }
 
 module.exports = {
